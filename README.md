@@ -1,6 +1,6 @@
 # Favorite Color API Specifications
 
-This repository contains the OpenAPI specifications for the Favorite Color API and tools to generate TypeScript client and server code using OpenAPI Generator.
+This repository contains the OpenAPI specifications for the Favorite Color API and tools to generate TypeScript client and server code.
 
 ## Structure
 
@@ -52,6 +52,27 @@ The generated client provides TypeScript interfaces and API client methods for a
 ### Server
 
 The generated server provides a basic Express.js server with route handlers based on the OpenAPI specification.
+
+## Code Generation Tools
+
+This project supports multiple code generation tools:
+
+### OpenAPI Generator
+
+When Java is installed on your system, the project uses [OpenAPI Generator](https://github.com/OpenAPITools/openapi-generator), which is a powerful tool that generates API client libraries, server stubs, and documentation from OpenAPI specifications.
+
+### Fallback Mechanism
+
+If Java is not available on your system, the script will automatically fall back to:
+
+- [openapi-typescript-codegen](https://github.com/ferdikoomen/openapi-typescript-codegen) for client generation
+- A custom server generator based on [openapi-typescript](https://github.com/drwpow/openapi-typescript) for server code generation
+
+This ensures you can generate code regardless of whether Java is installed on your system.
+
+## Customization
+
+You can customize the generation process by modifying the `generate.js` script. The script supports various options for both OpenAPI Generator (when Java is available) and the fallback mechanisms.
 
 ## About OpenAPI Generator
 

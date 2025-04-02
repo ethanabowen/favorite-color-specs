@@ -9,6 +9,7 @@ servers:
     variables:
       api-id:
         description: API Gateway ID
+        default: default
       region:
         default: us-east-1
         description: AWS region
