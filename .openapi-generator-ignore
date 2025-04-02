@@ -1,0 +1,47 @@
+# Ignore git-related files
+.gitignore
+git_push.sh
+
+# Ignore package management files (manage these manually)
+package.json
+package-lock.json
+yarn.lock
+
+# Ignore TypeScript configuration (manage this manually)
+tsconfig.json
+
+# Ignore documentation files (maintain these separately)
+README.md
+docs/
+.travis.yml
+
+# Ignore test files (write these manually)
+**/*.spec.ts
+**/*.test.ts
+test/
+tests/
+
+# Ignore configuration files
+.eslintrc
+.prettierrc
+.babelrc
+jest.config.js
+
+# Ignore OpenAPI Generator files
+.openapi-generator/
+.openapi-generator-ignore
+
+# Ignore CI/CD related files
+.github/
+.gitlab-ci.yml
+azure-pipelines.yml
+
+# Ignore editor/IDE specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Ignore any local development files
+*.local
+.env* 

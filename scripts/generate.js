@@ -2,11 +2,6 @@
 const fs = require('fs-extra');
 const path = require('path');
 const { execSync } = require('child_process');
-const yaml = require('js-yaml');
-const { 
-  serverPackageJsonContent, 
-  tsconfigContent 
-} = require('./configs');
 
 // Check for required arguments
 // Get command line arguments, excluding the first two (node executable and script path)
@@ -34,6 +29,7 @@ if (generationType !== 'client' && generationType !== 'server') {
 
 // Define output directories
 const rootDir = path.resolve(__dirname, '..');
+console.log(rootDir);
 const outputDir = path.join(rootDir, 'generated', generationType);
 
 // Create output directory if it doesn't exist
@@ -50,13 +46,33 @@ function generateClient(specPath, outputPath) {
     // Ensure OpenAPI Generator CLI is installed
     const openapiGenerator = path.join(rootDir, 'node_modules', '.bin', 'openapi-generator-cli');
     
-    // Run OpenAPI Generator
+    const additionalProperties = {
+      supportsES6: true,
+      withInterfaces: true,
+      npmName: `${path.basename(rootDir)}-client`,
+      npmVersion: '1.0.0',
+      apiDocs: "false",
+      modelDocs: "false",
+      apiTests: "false",
+      modelTests: "false"
+    }
+    
+    // Run OpenAPI Generator with disabled docs and tests
     execSync(`${openapiGenerator} generate \
       -g typescript-axios \
       -i ${specPath} \
       -o ${outputPath} \
-      --additional-properties=supportsES6=true,withInterfaces=true,npmName="${path.basename(rootDir)}-client",npmVersion=1.0.0`, 
-      { stdio: 'inherit' }
+      --skip-validate-spec \
+      --enable-post-process-file \
+      --ignore-file-override=${path.join(rootDir, '.openapi-generator-ignore')} \
+      --additional-properties=${JSON.stringify(additionalProperties)}`, 
+      { 
+        stdio: 'inherit',
+        env: {
+          ...process.env,
+          TS_POST_PROCESS_FILE: "prettier --write"
+        }
+      }
     );
 
     console.log(`TypeScript client successfully generated in ${outputPath}`);
@@ -68,7 +84,7 @@ function generateClient(specPath, outputPath) {
 
 // Function to generate server code using OpenAPI Generator
 function generateServer(specPath, outputPath) {
-  console.log(`Generating TypeScript server from ${specPath}...`);
+  console.log(`Generating TypeScript Lambda server from ${specPath}...`);
 
   try {
     // Clean the output directory
@@ -77,20 +93,66 @@ function generateServer(specPath, outputPath) {
     // Ensure OpenAPI Generator CLI is installed
     const openapiGenerator = path.join(rootDir, 'node_modules', '.bin', 'openapi-generator-cli');
     
-    // Run OpenAPI Generator
+    const additionalProperties = {
+      supportsES6: true,
+      npmName: `${path.basename(rootDir)}-server`,
+      npmVersion: '1.0.0',
+      apiDocs: "false",
+      modelDocs: "false",
+      apiTests: "false",
+      modelTests: "false",
+      // Lambda specific options
+      useSingleRequestParameter: true,
+      useObjectParameters: true,
+      useExpress: true,
+      useServerless: true
+    }
+
+    // Run OpenAPI Generator with Lambda-specific template
     execSync(`${openapiGenerator} generate \
       -g typescript-node \
       -i ${specPath} \
       -o ${outputPath} \
-      --additional-properties=supportsES6=true,npmName="${path.basename(rootDir)}-server",npmVersion=1.0.0`, 
-      { stdio: 'inherit' }
+      --skip-validate-spec \
+      --enable-post-process-file \
+      --ignore-file-override=${path.join(rootDir, '.openapi-generator-ignore')} \
+      --additional-properties=${JSON.stringify(additionalProperties)}`, 
+      { 
+        stdio: 'inherit',
+        env: {
+          ...process.env,
+          TS_POST_PROCESS_FILE: "prettier --write"
+        }
+      }
+    );
+
+    // Add Lambda wrapper template
+    const lambdaWrapperContent = `
+import serverless from 'serverless-http';
+import express from 'express';
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import { app } from './app';
+
+// Create serverless handler
+export const handler: APIGatewayProxyHandler = serverless(app);
+`;
+
+    fs.writeFileSync(
+      path.join(outputPath, 'src', 'lambda.ts'),
+      lambdaWrapperContent
     );
     
-    // Create or update tsconfig.json for the server
-    const tsconfigPath = path.join(outputPath, 'tsconfig.json');
-    fs.writeFileSync(tsconfigPath, tsconfigContent);
+    // Add necessary dependencies to package.json
+    const packageJsonPath = path.join(outputPath, 'package.json');
+    const packageJson = require(packageJsonPath);
+    packageJson.dependencies = {
+      ...packageJson.dependencies,
+      'serverless-http': '^3.1.1',
+      '@types/aws-lambda': '^8.10.119'
+    };
+    fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
     
-    console.log(`TypeScript server successfully generated in ${outputPath}`);
+    console.log(`TypeScript Lambda server successfully generated in ${outputPath}`);
   } catch (error) {
     console.error('Error generating server:', error);
     process.exit(1);

@@ -11,5 +11,3 @@ model/colorRecordResponse.ts
 model/colorSubmission.ts
 model/errorResponse.ts
 model/models.ts
-package.json
-tsconfig.json
