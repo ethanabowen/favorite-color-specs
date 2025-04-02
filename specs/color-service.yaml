@@ -1,0 +1,173 @@
+openapi: 3.0.0
+info:
+  title: Favorite Color API
+  description: API for managing favorite colors
+  version: 1.0.0
+
+servers:
+  - url: https://{api-id}.execute-api.{region}.amazonaws.com/{stage}
+    variables:
+      api-id:
+        description: API Gateway ID
+      region:
+        default: us-east-1
+        description: AWS region
+      stage:
+        default: dev
+        enum:
+          - dev
+          - prod
+        description: API deployment stage
+
+components:
+  schemas:
+    ColorSubmission:
+      type: object
+      required:
+        - firstName
+        - favoriteColor
+      properties:
+        firstName:
+          type: string
+          description: User's first name (used as primary key)
+        favoriteColor:
+          type: string
+          description: User's favorite color
+
+    ColorRecord:
+      type: object
+      required:
+        - pk
+        - favoriteColor
+        - colors
+        - timestamp
+      properties:
+        pk:
+          type: string
+          description: Primary key (firstName)
+        favoriteColor:
+          type: string
+          description: User's favorite color
+        colors:
+          type: array
+          items:
+            type: string
+          description: Array of colors submitted by the user
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp of the submission
+
+    # Generic API response structure that can be used with different data types
+    ApiResponse:
+      type: object
+      required:
+        - statusCode
+      properties:
+        statusCode:
+          type: integer
+          description: HTTP status code
+        data:
+          description: Response data payload
+        message:
+          type: string
+          description: Optional message (primarily for errors)
+
+    # More specific response types that extend the generic pattern
+    ColorRecordResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/ColorRecord'
+
+    ColorRecordArrayResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/ColorRecord'
+
+    ErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          required:
+            - message
+          properties:
+            data:
+              type: null
+
+  responses:
+    Error:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+paths:
+  /colors:
+    get:
+      summary: Search colors by first name
+      parameters:
+        - in: query
+          name: firstName
+          required: true
+          schema:
+            type: string
+          description: First name to search for
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ColorRecordArrayResponse'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+
+    post:
+      summary: Submit a new favorite color
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ColorSubmission'
+      responses:
+        '201':
+          description: Color successfully submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ColorRecordResponse'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+
+    options:
+      summary: CORS preflight request
+      responses:
+        '200':
+          description: CORS preflight response
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+            Access-Control-Allow-Methods:
+              schema:
+                type: string
+            Access-Control-Allow-Headers:
+              schema:
+                type: string
+            Access-Control-Max-Age:
+              schema:
+                type: string 
