@@ -1,5 +1,5 @@
 {
-  "name": "typescript-specs-genrerator",
+  "name": "typescript-specs-generator",
   "version": "1.0.0",
   "description": "OpenAPI specifications and code generation for Color API",
   "main": "index.js",

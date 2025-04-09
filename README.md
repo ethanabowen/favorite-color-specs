@@ -1,4 +1,4 @@
-# typescript-specs-genrerator
+# typescript-specs-generator
 
 This project manages OpenAPI specifications and generates TypeScript types/interfaces for both client and server components of the Any OpenAPI application.
 
