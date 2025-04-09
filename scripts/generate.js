@@ -84,33 +84,29 @@ function generateClient(specPath, outputPath) {
 
 // Function to generate server code using OpenAPI Generator
 function generateServer(specPath, outputPath) {
-  console.log(`Generating TypeScript Lambda server from ${specPath}...`);
+  console.log(`Generating NestJS server from ${specPath}...`);
 
   try {
     // Clean the output directory
     fs.emptyDirSync(outputPath);
     
-    // Ensure OpenAPI Generator CLI is installed
     const openapiGenerator = path.join(rootDir, 'node_modules', '.bin', 'openapi-generator-cli');
     
     const additionalProperties = {
-      supportsES6: true,
       npmName: `${path.basename(rootDir)}-server`,
       npmVersion: '1.0.0',
+      supportsES6: true,
+      framework: 'nest',
+      useTypeScript: true,
       apiDocs: "false",
       modelDocs: "false",
       apiTests: "false",
-      modelTests: "false",
-      // Lambda specific options
-      useSingleRequestParameter: true,
-      useObjectParameters: true,
-      useExpress: true,
-      useServerless: true
+      modelTests: "false"
     }
 
-    // Run OpenAPI Generator with Lambda-specific template
+    // Run OpenAPI Generator with NestJS template
     execSync(`${openapiGenerator} generate \
-      -g typescript-node \
+      -g typescript-nestjs \
       -i ${specPath} \
       -o ${outputPath} \
       --skip-validate-spec \
@@ -126,33 +122,7 @@ function generateServer(specPath, outputPath) {
       }
     );
 
-    // Add Lambda wrapper template
-    const lambdaWrapperContent = `
-import serverless from 'serverless-http';
-import express from 'express';
-import { APIGatewayProxyHandler } from 'aws-lambda';
-import { app } from './app';
-
-// Create serverless handler
-export const handler: APIGatewayProxyHandler = serverless(app);
-`;
-
-    fs.writeFileSync(
-      path.join(outputPath, 'src', 'lambda.ts'),
-      lambdaWrapperContent
-    );
-    
-    // Add necessary dependencies to package.json
-    const packageJsonPath = path.join(outputPath, 'package.json');
-    const packageJson = require(packageJsonPath);
-    packageJson.dependencies = {
-      ...packageJson.dependencies,
-      'serverless-http': '^3.1.1',
-      '@types/aws-lambda': '^8.10.119'
-    };
-    fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
-    
-    console.log(`TypeScript Lambda server successfully generated in ${outputPath}`);
+    console.log(`NestJS server successfully generated in ${outputPath}`);
   } catch (error) {
     console.error('Error generating server:', error);
     process.exit(1);
