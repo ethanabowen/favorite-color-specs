@@ -1,7 +1,7 @@
 {
-  "name": "favorite-color-spec",
+  "name": "typescript-specs-genrerator",
   "version": "1.0.0",
-  "description": "OpenAPI specifications and code generation for Favorite Color API",
+  "description": "OpenAPI specifications and code generation for Color API",
   "main": "index.js",
   "scripts": {
     "generate:client": "node scripts/generate.js client",
